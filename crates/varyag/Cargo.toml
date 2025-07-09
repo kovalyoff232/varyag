@@ -1,0 +1,24 @@
+[package]
+name = "varyag"
+version = "0.1.0"
+edition = "2021"
+description = "Varyag: A unified, fast, and intuitive network utility for developers."
+license = "MIT"
+repository = "https://github.com/user/varyag" # Placeholder
+keywords = ["cli", "network", "http", "websockets", "tunneling"]
+categories = ["command-line-utilities", "network-programming"]
+
+[dependencies]
+vyg-core = { path = "../vyg-core" }
+vyg-display = { path = "../vyg-display" }
+clap = { version = "4.5.4", features = ["derive", "env"] }
+tokio = { version = "1.37.0", features = ["full"] }
+clap_complete = "4.5.1"
+
+[dev-dependencies]
+anyhow = "1.0.86"
+reqwest = "0.12.4"
+axum = "0.7.5"
+tower = { version = "0.4", features = ["util"] }
+tokio-util = { version = "0.7.11", features = ["net"] }
+portpicker = "0.1.1"

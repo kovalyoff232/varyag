@@ -1,0 +1,7 @@
+[workspace]
+members = [
+    "crates/varyag",
+    "crates/vyg-core",
+    "crates/vyg-display",
+]
+resolver = "2"

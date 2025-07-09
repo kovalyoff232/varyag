@@ -1,0 +1,17 @@
+# Rust build artifacts
+/target/
+
+# IDE configuration
+.idea/
+.vscode/
+
+# Environment variables
+.env
+
+# Test files
+/index.html
+*.txt
+
+# Executables (if built locally in root)
+*.exe
+*.pdb
