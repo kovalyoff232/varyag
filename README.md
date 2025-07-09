@@ -1,100 +1,127 @@
 # VARYAG
 
-VARYAG is a modern, unified, and intuitive network utility for developers, designed to replace the fragmented command-line ecosystem of tools like `curl`, `httpie`, `netcat`, `websocat`, and `ngrok`.
+VARYAG is a unified, fast, and intuitive network utility for developers, built in Rust. It aims to replace the fragmented command-line tools like `curl`, `httpie`, `netcat`, `websocat`, and `ngrok` by integrating their most common functionalities into a single, cohesive interface.
 
-The core mission of VARYAG is to reduce the cognitive load of switching between different tools and syntaxes by providing a single, powerful, and consistent interface for 95% of daily network-related tasks.
+## Vision
+
+The mission of VARYAG is to eliminate the cognitive overhead of switching between different network tools and their syntaxes. By providing a single, powerful, and easy-to-use CLI, VARYAG streamlines the daily workflows of backend developers, DevOps engineers, security specialists, and system administrators.
 
 ## Features
 
-- **Unified Interface**: A single CLI for HTTP/S, WebSockets, TCP, and UDP.
-- **Intuitive Syntax**: A command structure built around user intent (`send`, `listen`, `bridge`).
-- **Smart Protocol Detection**: Automatically switches modes based on the URL scheme (`http://`, `ws://`, `tcp://`).
-- **Beautiful Output**: Automatic JSON formatting and syntax highlighting.
-- **Network Tunneling**: Expose local services to the internet with a single command, just like ngrok.
-- **Cross-Platform**: Built in Rust, VARYAG is a single, fast, and reliable binary for all major platforms.
+- **Unified Interface**: A single command structure for various network tasks.
+- **Intelligent Protocol Detection**: Automatically detects the protocol (`http/s`, `ws/s`, `tcp`, `udp`) from the URL.
+- **Rich Formatting**: Automatic JSON formatting and syntax highlighting for HTTP responses.
+- **Comprehensive Commands**:
+  - `varyag send`: Send network requests (HTTP, WebSocket, TCP, UDP).
+  - `varyag listen`: Listen for incoming traffic, inspect requests, serve static files, or act as a proxy.
+  - `varyag bridge`: Create public tunnels to your local services, replacing ngrok.
 
 ## Installation
 
-Currently, you can install VARYAG from source using Cargo:
-```bash
-cargo install --git https://github.com/user/varyag.git # Replace with actual repo URL
-```
-Future versions will be available via Homebrew, Scoop, and as pre-compiled binaries in GitHub Releases.
+*Coming soon...* (Instructions for installing via `cargo`, `brew`, `scoop`, and direct downloads will be added here).
 
 ## Usage
 
 ### `varyag send`
 
-Replaces `curl` and `httpie`.
+This command is your go-to tool for sending data across the network.
 
-**Send a GET request:**
-```bash
-varyag send http GET https://api.example.com/users/1
-```
+**Syntax:** `varyag send <DESTINATION> [METHOD] [BODY_ITEMS...] [OPTIONS]`
 
-**Send a POST request with data:**
-```bash
-varyag send http POST https://api.example.com/users name="Varyag" ship_class:='{"type": "Cruiser"}'
-```
+**Examples:**
 
-**Connect to a WebSocket and send a message:**
-```bash
-varyag send ws wss://echo.websocket.events "Hello, Varyag!"
-```
+- **Simple GET request:**
+  ```bash
+  varyag send https://api.example.com/users/1
+  ```
 
-**Send data over a raw TCP connection:**
-```bash.
-echo "GET_KEY my_key" | varyag send tcp 127.0.0.1:6379
-```
+- **POST request with JSON body:**
+  ```bash
+  varyag send api.example.com/users name="Varyag" status:='{"launched": 1899, "active": true}'
+  ```
+
+- **Set custom headers:**
+  ```bash
+  varyag send private.api/data -H "X-API-Key: my-secret-token" -H "Accept: application/json"
+  ```
+
+- **Send data from a file:**
+  ```bash
+  varyag send example.com/upload --data-file ./payload.json
+  ```
+
+- **Interact with a TCP service (e.g., Redis):**
+  ```bash
+  # One-shot command
+  echo "GET my_key" | varyag send tcp://redis.local:6379
+
+  # Interactive session
+  varyag send tcp://redis.local:6379 -i
+  ```
+
+- **Send a WebSocket message:**
+  ```bash
+  varyag send ws://echo.websocket.events "Hello, WebSocket!"
+  ```
 
 ### `varyag listen`
 
-Replaces `netcat -l` and can serve static files.
+Inspect traffic, run simple servers, or proxy requests.
 
-**Inspect incoming HTTP requests (e.g., for webhooks):**
-```bash
-varyag listen http 4000
-```
+**Syntax:** `varyag listen <http|tcp|ws> [PORT] [OPTIONS]`
 
-**Start a static file server in the current directory:**
-```bash
-varyag listen http 8000 --serve .
-```
+**Examples:**
 
-**Create a simple TCP echo server:**
-```bash
-varyag listen tcp 9000 --echo
-```
+- **Inspect incoming HTTP requests (great for webhooks):**
+  ```bash
+  varyag listen http 4000
+  ```
+
+- **Serve a local directory over HTTP:**
+  ```bash
+  varyag listen http 8080 --serve ./my-website
+  ```
+
+- **Proxy all incoming traffic to a local development server:**
+  ```bash
+  varyag listen http 3000 --proxy-pass http://localhost:8080
+  ```
+
+- **Run a TCP echo server:**
+  ```bash
+  varyag listen tcp 9000 --echo
+  ```
 
 ### `varyag bridge`
 
-Replaces `ngrok`.
+Expose a local port to the internet.
 
-**Expose a local web server on port 3000 to the internet:**
-```bash
-varyag bridge 3000
-```
-This will connect to a public server and provide you with a public URL that tunnels traffic to your local port 3000.
+**Syntax:** `varyag bridge <LOCAL_PORT> [OPTIONS]`
 
-### Shell Completions
+**Example:**
 
-To generate shell completion scripts, use the `generate-completion` command.
+- **Create a public tunnel to your local port 3000:**
+  ```bash
+  varyag bridge 3000
+  ```
+  VARYAG will provide a public URL (e.g., `some-name.bore.pub`) that tunnels all traffic to `127.0.0.1:3000`.
 
-**For Bash, add this to your `.bashrc`:**
-```bash
-eval "$(varyag generate-completion bash)"
-```
+## Development
 
-**For Zsh, add this to your `.zshrc`:**
-```bash
-eval "$(varyag generate-completion zsh)"
-```
+This project is a Cargo workspace. To build it, you need the Rust toolchain installed.
 
-**For Fish, add this to your `config.fish`:**
-```bash
-varyag generate-completion fish | source
-```
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/your-username/varyag.git
+    cd varyag
+    ```
 
-## License
+2.  **Build the project:**
+    ```bash
+    cargo build --release
+    ```
+    The binary will be available at `target/release/varyag`.
 
-VARYAG is licensed under the MIT License.
+## Contribution
+
+Contributions are welcome! Please feel free to open an issue or submit a pull request.

@@ -1,36 +1,76 @@
-use reqwest::Client;
+use reqwest::{Client, Method, header::HeaderMap};
 use serde_json::{Value, Map};
 use anyhow::{anyhow, Result};
+use std::fs;
+use std::path::PathBuf;
 
 const USER_AGENT: &str = "Varyag/0.1.0";
 
-pub async fn send_get_request(url: &str) -> Result<String, reqwest::Error> {
-    let client = Client::builder()
-        .user_agent(USER_AGENT)
-        .build()?;
-    let response = client.get(url).send().await?;
-    let body = response.text().await?;
-    Ok(body)
+pub struct HttpRequest {
+    pub url: String,
+    pub method: String,
+    pub headers: Vec<String>,
+    pub body: Vec<String>,
+    pub data_file: Option<PathBuf>,
+    pub noproxy: bool,
 }
 
-pub async fn send_post_request(url: &str, body_items: Vec<String>) -> Result<String> {
-    let client = Client::builder()
-        .user_agent(USER_AGENT)
-        .build()?;
+pub struct HttpResponse {
+    pub status: String,
+    pub headers: HeaderMap,
+    pub body: String,
+}
 
-    let mut body_map = Map::new();
-    for item in body_items {
-        let (key, value) = parse_request_item(&item)?;
-        body_map.insert(key, value);
+pub async fn send_request(request: HttpRequest) -> Result<HttpResponse> {
+    let mut client_builder = Client::builder()
+        .user_agent(USER_AGENT);
+
+    if request.noproxy {
+        client_builder = client_builder.no_proxy();
     }
 
-    let response = client.post(url)
-        .json(&body_map)
-        .send()
-        .await?;
+    let client = client_builder.build()?;
 
-    let response_body = response.text().await?;
-    Ok(response_body)
+    let method = Method::from_bytes(request.method.to_uppercase().as_bytes())?;
+
+    let mut request_builder = client.request(method, &request.url);
+
+    // Add headers
+    for header in request.headers {
+        let parts: Vec<&str> = header.splitn(2, ':').collect();
+        if parts.len() == 2 {
+            request_builder = request_builder.header(parts[0].trim(), parts[1].trim());
+        } else {
+            return Err(anyhow!("Invalid header format: {}", header));
+        }
+    }
+
+    // Prepare body
+    let body_content: Option<String> = if let Some(file_path) = request.data_file {
+        Some(fs::read_to_string(file_path)?)
+    } else if !request.body.is_empty() {
+        let mut body_map = Map::new();
+        for item in request.body {
+            let (key, value) = parse_request_item(&item)?;
+            body_map.insert(key, value);
+        }
+        Some(serde_json::to_string(&body_map)?)
+    } else {
+        None
+    };
+
+    if let Some(body) = body_content {
+        request_builder = request_builder.header("Content-Type", "application/json");
+        request_builder = request_builder.body(body);
+    }
+
+    let response = request_builder.send().await?;
+    
+    let status = response.status().to_string();
+    let headers = response.headers().clone();
+    let body = response.text().await?;
+
+    Ok(HttpResponse { status, headers, body })
 }
 
 fn parse_request_item(item: &str) -> Result<(String, Value)> {

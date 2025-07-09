@@ -9,6 +9,7 @@ keywords = ["network", "cli", "http", "tcp", "tunnel"]
 categories = ["command-line-utilities", "network-programming"]
 
 [dependencies]
+vyg-display = { path = "../vyg-display" }
 reqwest = { version = "0.12.4", features = ["json", "stream"] }
 tokio = { version = "1.37.0", features = ["full"] }
 axum = "0.7.5"

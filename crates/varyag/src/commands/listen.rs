@@ -22,8 +22,10 @@ pub enum Protocol {
 pub struct HttpArgs {
     #[arg(default_value = "8080")]
     pub port: u16,
-    #[arg(long)]
+    #[arg(long, value_name = "PATH", conflicts_with = "proxy_pass")]
     pub serve: Option<PathBuf>,
+    #[arg(long, value_name = "URL", conflicts_with = "serve")]
+    pub proxy_pass: Option<String>,
 }
 
 #[derive(Args, Debug)]
@@ -43,7 +45,7 @@ pub struct WsArgs {
 pub async fn handle_listen(command: ListenCommand) {
     match command.protocol {
         Protocol::Http(args) => {
-            if let Err(e) = net_listener::start_http_listener(args.port, args.serve).await {
+            if let Err(e) = net_listener::start_http_listener(args.port, args.serve, args.proxy_pass).await {
                 eprintln!("Error: {}", e);
             }
         }
